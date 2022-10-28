@@ -1,0 +1,38 @@
+name: Deploy to EdgeServer
+
+on:
+  push:
+    paths:
+      - 'web/**'
+      - '.github/workflows/*'
+    branches:
+      - "master"
+
+jobs:
+  zip-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '16.9.1'
+          registry-url: 'https://registry.npmjs.org'
+      - uses: pnpm/action-setup@v2.2.2
+        with:
+          version: 6.0.2
+      - name: Install packages
+        run: |
+          cd web
+          pnpm install
+      - name: Build
+        run: |
+          cd web
+          NODE_ENV=production
+          pnpm build
+      - name: Edgeserver Upload
+        uses: lvkdotsh/edgeserver-action@master
+        with:
+          app_id: "108980257716965376"
+          server: https://api.edgeserver.io
+          token: ${{ secrets.EDGE_TOKEN }}
+          directory: web/dist/
